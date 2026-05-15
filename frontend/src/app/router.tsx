@@ -6,6 +6,7 @@ import { Dashboard } from "./components/dashboard/Dashboard";
 import { ProjectsModule } from "./components/projects/ProjectsModule";
 import { UnitsModule } from "./components/units/UnitsModule";
 import { CustomersModule } from "./components/customers/CustomersModule";
+import { OwnerKycModule } from "./components/owners/OwnerKycModule";
 import { AccountingModule } from "./components/accounting/AccountingModule";
 import { PaymentsModule } from "./components/payments/PaymentsModule";
 import { CRMModule } from "./components/crm/CRMModule";
@@ -72,6 +73,12 @@ export const router = createBrowserRouter([
         path: "customers",
         element: (
           <Themed>{(isDark) => <CustomersModule isDark={isDark} />}</Themed>
+        ),
+      },
+      {
+        path: "owner-kyc",
+        element: (
+          <Themed>{(isDark) => <OwnerKycModule isDark={isDark} />}</Themed>
         ),
       },
       {

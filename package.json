@@ -8,6 +8,8 @@
     "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
+    "db:migrate": "npm run db:migrate --prefix backend",
+    "db:seed": "npm run db:seed --prefix backend",
     "dev:client": "npm run dev:frontend",
     "dev:server": "npm run dev:backend",
     "start": "npm run start --prefix backend",

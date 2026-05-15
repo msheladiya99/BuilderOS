@@ -34,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
     ]
   },
   { id: "customers", label: "Customers", icon: Users },
+  { id: "owner-kyc", label: "Owner KYC", icon: ShieldCheck },
   { id: "crm", label: "Sales CRM", icon: TrendingUp, badge: 12 },
   {
     id: "accounting", label: "Accounting", icon: Calculator,
