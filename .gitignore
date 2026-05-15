@@ -1,9 +1,26 @@
+# Dependencies
 node_modules/
+apps/*/node_modules/
+
+# Build
 dist/
-backend/data.json
-backend/data/store.json
-server/data.json
+apps/web/dist/
+apps/api/dist/
+
+# Environment
 .env
 .env.local
+apps/api/.env
+apps/web/.env
+
+# Runtime data
+apps/api/data/store.json
+backend/data/store.json
+
+# Logs & OS
 *.log
 .DS_Store
+
+# Deprecated (remove locally)
+backend/node_modules/
+frontend/node_modules/

@@ -4,14 +4,12 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "declaration": true,
-    "sourceMap": true
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*", "database/scripts/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "legacy-json"]
 }

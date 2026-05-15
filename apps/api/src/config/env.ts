@@ -2,15 +2,14 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
-dotenv.config({ path: path.join(root, ".env") });
-dotenv.config();
+const backendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+dotenv.config({ path: path.join(backendRoot, ".env") });
 import { z } from "zod";
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   API_PORT: z.coerce.number().default(3001),
-  DATABASE_URL: z.string().min(1),
+  DATABASE_URL: z.string().optional(),
   JWT_SECRET: z.string().min(16),
   JWT_EXPIRES_IN: z.string().default("7d"),
   OTP_DEMO_CODE: z.string().default("123456"),

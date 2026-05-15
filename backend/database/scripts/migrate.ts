@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import pg from "pg";
-import "dotenv/config";
+import "./load-env.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const schemaDir = path.resolve(__dirname, "../../../../database/schema");

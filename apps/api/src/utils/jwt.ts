@@ -9,6 +9,8 @@ export type JwtPayload = {
   companyId: string | null;
   subdomain: string | null;
   schemaName: string | null;
+  legacyId?: number;
+  legacyProjectId?: number | null;
 };
 
 export function signToken(payload: Omit<JwtPayload, "sub"> & { sub: string }) {

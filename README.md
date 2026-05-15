@@ -1,75 +1,72 @@
-# BuilderOS — Real Estate ERP
+# BuilderOS
 
-Full-stack Builder Management System from Figma design.
+Enterprise ERP for real-estate builders — production monorepo.
 
-**Figma:** https://www.figma.com/design/VJ6cO2r3bLzEOZcnWEfqOq/builder
+## Project structure
 
-## Stack
-
-- **Frontend:** React 18, Vite 6, Tailwind CSS 4, React Router 7, Recharts
-- **Backend:** Node.js, Express, JSON file database (persistent)
+```
+builder-project/
+├── apps/
+│   ├── api/                 # Express + TypeScript API (PostgreSQL)
+│   │   ├── src/
+│   │   ├── data/            # JSON demo store (runtime)
+│   │   ├── .env             # Backend secrets (not committed)
+│   │   └── package.json
+│   └── web/                 # React + Vite SPA
+│       ├── src/
+│       ├── .env             # VITE_* public config
+│       └── package.json
+├── packages/
+│   └── shared/              # Shared Zod schemas & types
+├── database/
+│   ├── schema/              # PostgreSQL DDL
+│   └── scripts/             # migrate.ts, seed.ts
+├── infrastructure/
+│   └── docker-compose.yml   # PostgreSQL + Redis
+├── docs/                    # Architecture & phase docs
+└── package.json             # npm workspaces root
+```
 
 ## Quick start
 
 ```bash
+# 1. Install (from repo root)
 npm install
+
+# 2. Environment
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+
+# 3. Database (optional — API falls back to JSON demo mode)
+npm run docker:up
+npm run db:migrate
+npm run db:seed
+
+# 4. Run API + web
 npm run dev
 ```
 
-Opens:
-- **App:** http://localhost:5173
-- **API:** http://localhost:3001
-
-## Demo login
-
-| Role | Email | Password | OTP |
-|------|-------|----------|-----|
-| Admin | arjun@builderos.in | password | 123456 |
-| Sales | sales@builderos.in | password | 123456 |
-| Accounts | accounts@builderos.in | password | 123456 |
-| Site | site@builderos.in | password | 123456 |
-
-## Features
-
-- Role-based navigation (admin, sales, accounts, site)
-- JWT auth with OTP verification
-- REST API with CRUD for projects, units, customers, leads, payments
-- Live dashboard from API data
-- Persistent database (`server/data.json`)
-- Dark mode, offline banner, project switcher
+| App | URL |
+|-----|-----|
+| Web | http://localhost:5173 |
+| API | http://localhost:3001/api |
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start API + frontend together |
-| `npm run dev:client` | Frontend only |
-| `npm run dev:server` | API only |
-| `npm run build` | Production build |
-| `npm start` | Run API server |
+| `npm run dev` | API + web together |
+| `npm run dev:api` | Backend only |
+| `npm run dev:web` | Frontend only |
+| `npm run db:migrate` | Apply PostgreSQL schema |
+| `npm run db:seed` | Demo tenants & users |
+| `npm run docker:up` | Start Postgres + Redis |
 
-## API
+## Demo login
 
-Base URL: `http://localhost:3001/api`
+- **Super Admin:** `superadmin@builderos.in` / `password` / OTP `123456`
+- **Tenant:** `http://skyline-heights.localhost:5173/login` — `arjun@builderos.in` / `password`
 
-- `POST /auth/login` — validate credentials
-- `POST /auth/verify-otp` — get JWT token
-- `GET /bootstrap` — all app data
-- `GET /dashboard` — dashboard aggregates
-- CRUD: `/projects`, `/units`, `/customers`, `/leads`, `/payments`, etc.
+## Legacy folders
 
-Reset database: `POST /api/admin/reset`
-
-## Project structure
-
-```
-src/
-  app/           # Pages & modules (Figma UI)
-  context/       # Auth, data, theme
-  lib/           # API client
-  types/         # TypeScript types
-server/
-  index.js       # Express API
-  seed.json      # Initial data
-  data.json      # Runtime DB (auto-created)
-```
+`backend/` and `frontend/` at the repo root are **deprecated** — use `apps/api` and `apps/web`. Safe to delete after stopping the dev server.

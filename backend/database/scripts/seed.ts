@@ -3,7 +3,7 @@ import pg from "pg";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import "dotenv/config";
+import "./load-env.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATE_PATH = path.resolve(__dirname, "../../../../database/schema/002_tenant_template.sql");

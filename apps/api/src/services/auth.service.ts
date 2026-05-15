@@ -95,6 +95,11 @@ export async function verifyOtp(email: string, otp: string, subdomain?: string) 
 
   await query(`UPDATE users SET last_login_at = NOW() WHERE id = $1`, [user.id]);
 
+  const { LEGACY_USER_IDS } = await import("./json-store.service.js");
+  const legacyId = LEGACY_USER_IDS[user.email.toLowerCase()];
+  const legacyProjectId =
+    user.role === "superadmin" ? null : user.email.includes("greenvalley") ? 2 : 1;
+
   const token = signToken({
     sub: user.id,
     email: user.email,
@@ -103,6 +108,8 @@ export async function verifyOtp(email: string, otp: string, subdomain?: string) 
     companyId: company?.id ?? null,
     subdomain: company?.subdomain ?? null,
     schemaName: company?.schema_name ?? null,
+    legacyId,
+    legacyProjectId,
   });
 
   return { token, user: toSafeUser(user, company) };

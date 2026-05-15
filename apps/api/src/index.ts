@@ -2,8 +2,9 @@ import express from "express";
 import cors from "cors";
 import { env } from "./config/env.js";
 import { v1Router } from "./routes/v1/index.js";
+import { compatRouter, checkPostgres } from "./routes/compat.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import { pool } from "./db/pool.js";
+import { getJsonDb } from "./services/json-store.service.js";
 
 const app = express();
 
@@ -15,26 +16,42 @@ app.use(
 );
 app.use(express.json({ limit: "10mb" }));
 
-app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, app: "BuilderOS API", postgres: true });
+app.get("/api/health", async (_req, res) => {
+  const pg = await checkPostgres();
+  res.json({
+    ok: true,
+    app: "BuilderOS API",
+    postgres: pg,
+    modules: "json-store",
+  });
 });
 
 app.use("/api/v1", v1Router);
+app.use("/api", compatRouter);
 
 app.use(errorHandler);
 
 async function start() {
+  const pg = await checkPostgres();
+  if (pg) {
+    console.log("PostgreSQL connected — /api/v1 + Owner KYC enabled");
+  } else {
+    console.warn("PostgreSQL unavailable — running JSON demo mode for /api/*");
+    console.warn("Start Docker: docker compose up -d && npm run db:migrate && npm run db:seed");
+  }
+
   try {
-    await pool.query("SELECT 1");
-    console.log("PostgreSQL connected");
-  } catch (err) {
-    console.error("PostgreSQL connection failed:", (err as Error).message);
-    console.error("Run: docker compose up -d && npm run db:migrate && npm run db:seed");
+    getJsonDb();
+    console.log("JSON module store loaded (backend/data/store.json)");
+  } catch (e) {
+    console.error((e as Error).message);
     process.exit(1);
   }
 
   app.listen(env.API_PORT, () => {
-    console.log(`BuilderOS API v1 → http://localhost:${env.API_PORT}/api/v1`);
+    console.log(`BuilderOS backend → http://localhost:${env.API_PORT}`);
+    console.log(`  Legacy UI:  /api/*`);
+    console.log(`  REST v1:    /api/v1/*`);
   });
 }
 
