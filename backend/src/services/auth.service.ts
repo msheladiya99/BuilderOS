@@ -4,6 +4,7 @@ import { findCompanyBySubdomain } from "../db/tenant.js";
 import { signToken } from "../utils/jwt.js";
 import { UnauthorizedError, ForbiddenError, NotFoundError } from "../utils/errors.js";
 import { env } from "../config/env.js";
+import { readStore, LEGACY_USER_IDS } from "./json-store.service.js";
 
 const ROLE_META: Record<string, { label: string; desc: string }> = {
   admin: { label: "Administrator", desc: "Full system access" },
@@ -95,10 +96,18 @@ export async function verifyOtp(email: string, otp: string, subdomain?: string) 
 
   await query(`UPDATE users SET last_login_at = NOW() WHERE id = $1`, [user.id]);
 
-  const { LEGACY_USER_IDS } = await import("./json-store.service.js");
+  const db = readStore();
   const legacyId = LEGACY_USER_IDS[user.email.toLowerCase()];
-  const legacyProjectId =
-    user.role === "superadmin" ? null : user.email.includes("greenvalley") ? 2 : 1;
+  
+  // Find legacy project ID by subdomain
+  let legacyProjectId: number | null = null;
+  if (user.role !== "superadmin") {
+    const subdomain = company?.subdomain || (user.email.includes("greenvalley") ? "greenvalley" : "builderos");
+    const lp = (db.projects as { id: number; subdomain?: string }[]).find(
+      (p) => p.subdomain === subdomain
+    );
+    legacyProjectId = lp?.id ?? (user.email.includes("greenvalley") ? 2 : 1);
+  }
 
   const token = signToken({
     sub: user.id,
@@ -113,6 +122,32 @@ export async function verifyOtp(email: string, otp: string, subdomain?: string) 
   });
 
   return { token, user: toSafeUser(user, company) };
+}
+
+export async function updateProfile(userId: string, data: { name?: string; avatar?: string }) {
+  const updates: string[] = [];
+  const params: unknown[] = [userId];
+  let i = 2;
+
+  if (data.name) {
+    updates.push(`name = $${i++}`);
+    params.push(data.name);
+  }
+  if (data.avatar) {
+    updates.push(`avatar = $${i++}`);
+    params.push(data.avatar);
+  }
+
+  if (updates.length === 0) return getMe(userId);
+
+  const { rows } = await query(
+    `UPDATE users SET ${updates.join(", ")}, updated_at = NOW()
+     WHERE id = $1 AND deleted_at IS NULL RETURNING id, email, name, role, company_id, avatar`,
+    params
+  );
+  
+  if (!rows[0]) throw new NotFoundError("User not found");
+  return rows[0];
 }
 
 export async function getMe(userId: string) {

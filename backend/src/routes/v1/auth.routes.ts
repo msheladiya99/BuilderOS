@@ -42,3 +42,20 @@ authRoutes.get("/me", requireAuth, async (req, res, next) => {
     next(e);
   }
 });
+
+authRoutes.patch("/profile", requireAuth, async (req, res, next) => {
+  try {
+    const user = getAuthUser(req);
+    const updated = await authService.updateProfile(user.sub, req.body);
+    await writeAudit({
+      action: "update",
+      tableName: "users",
+      recordId: user.sub,
+      newVal: req.body,
+      req,
+    });
+    res.json(updated);
+  } catch (e) {
+    next(e);
+  }
+});

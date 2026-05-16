@@ -12,7 +12,7 @@ import {
   scopeBootstrap,
   resetJsonDb,
 } from "../services/json-store.service.js";
-import { filterListForProject } from "../utils/tenant-scope.js";
+import { filterListForProject, canAccessItem } from "../utils/tenant-scope.js";
 import { pool } from "../db/pool.js";
 import { env } from "../config/env.js";
 import { ownersJsonRoutes } from "./v1/owners-json.routes.js";
@@ -188,6 +188,31 @@ compatRouter.get("/auth/me", requireAuth, async (req, res, next) => {
   }
 });
 
+compatRouter.patch("/auth/profile", requireAuth, async (req, res, next) => {
+  try {
+    const auth = getAuthUser(req);
+    const { name, avatar } = req.body;
+    
+    if (pgReady && auth.sub && auth.sub.includes("-")) {
+      const updated = await authService.updateProfile(auth.sub, { name, avatar });
+      return res.json(toLegacyUser(updated as any));
+    }
+    
+    const db = getJsonDb();
+    const legacyId = (auth as { legacyId?: number }).legacyId ?? Number(auth.sub);
+    const user = db.users.find((u) => u.id === legacyId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    if (name) user.name = name;
+    if (avatar) user.avatar = avatar;
+    saveJsonDb(db);
+    
+    res.json(toLegacyUser(user as any));
+  } catch (e) {
+    next(e);
+  }
+});
+
 compatRouter.post("/auth/forgot-password", (_req, res) => {
   res.json({ message: "Reset link sent (demo mode)" });
 });
@@ -273,32 +298,82 @@ for (const key of COLLECTIONS) {
   });
 
   compatRouter.get(`/${key}/:id`, requireAuth, (req, res) => {
+    const auth = getAuthUser(req);
+    const projectId = (auth as { legacyProjectId?: number | null }).legacyProjectId;
+    const db = getJsonDb();
     const id = Number(paramId(req));
     const item = jsonStore.get(key, id);
+    
     if (!item) return res.status(404).json({ error: "Not found" });
+    
+    // Security check: Ensure item belongs to user's project
+    if (projectId != null && !canAccessItem(key, item as Record<string, unknown>, projectId, db)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
     res.json(item);
   });
 
   compatRouter.post(`/${key}`, requireAuth, (req, res) => {
-    const item = jsonStore.create(key, req.body);
+    const auth = getAuthUser(req);
+    const projectId = (auth as { legacyProjectId?: number | null }).legacyProjectId;
+    const body = { ...req.body };
+    
+    // Auto-inject projectId for new items if user is scoped
+    if (projectId != null) {
+      body.projectId = projectId;
+    }
+    
+    const item = jsonStore.create(key, body);
     res.status(201).json(item);
   });
 
   compatRouter.put(`/${key}/:id`, requireAuth, (req, res) => {
-    const item = jsonStore.update(key, Number(paramId(req)), req.body);
+    const auth = getAuthUser(req);
+    const projectId = (auth as { legacyProjectId?: number | null }).legacyProjectId;
+    const db = getJsonDb();
+    const id = Number(paramId(req));
+    const item = jsonStore.get(key, id);
+    
     if (!item) return res.status(404).json({ error: "Not found" });
-    res.json(item);
+    
+    // Security check
+    if (projectId != null && !canAccessItem(key, item as Record<string, unknown>, projectId, db)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const updated = jsonStore.update(key, id, req.body);
+    res.json(updated);
   });
 
   compatRouter.delete(`/${key}/:id`, requireAuth, (req, res) => {
-    const ok = jsonStore.remove(key, Number(paramId(req)));
-    if (!ok) return res.status(404).json({ error: "Not found" });
-    res.json({ success: true });
+    const auth = getAuthUser(req);
+    const projectId = (auth as { legacyProjectId?: number | null }).legacyProjectId;
+    const db = getJsonDb();
+    const id = Number(paramId(req));
+    const item = jsonStore.get(key, id);
+    
+    if (!item) return res.status(404).json({ error: "Not found" });
+    
+    // Security check
+    if (projectId != null && !canAccessItem(key, item as Record<string, unknown>, projectId, db)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const ok = jsonStore.remove(key, id);
+    res.json({ success: ok });
   });
 }
 
-compatRouter.get("/notifications", requireAuth, (_req, res) => {
-  res.json(getJsonDb().notifications ?? []);
+compatRouter.get("/notifications", requireAuth, (req, res) => {
+  const auth = getAuthUser(req);
+  const projectId = (auth as { legacyProjectId?: number | null }).legacyProjectId;
+  const db = getJsonDb();
+  let items = (db.notifications as Record<string, unknown>[]) ?? [];
+  if (projectId != null) {
+    items = items.filter((n) => n.projectId === projectId);
+  }
+  res.json(items);
 });
 
 compatRouter.patch("/notifications/:id/read", requireAuth, (req, res) => {
@@ -311,9 +386,19 @@ compatRouter.patch("/notifications/:id/read", requireAuth, (req, res) => {
 });
 
 compatRouter.post("/activities", requireAuth, (req, res) => {
+  const auth = getAuthUser(req);
+  const projectId = (auth as { legacyProjectId?: number | null }).legacyProjectId;
   const db = getJsonDb();
   const activities = (db.activities as Record<string, unknown>[]) ?? [];
-  const item = { id: (db._counters.activities = (db._counters.activities || 0) + 1), time: "now", color: "blue", ...req.body };
+  
+  const item = { 
+    id: (db._counters.activities = (db._counters.activities || 0) + 1), 
+    time: "now", 
+    color: "blue", 
+    projectId: projectId ?? null,
+    ...req.body 
+  };
+  
   activities.unshift(item);
   if (activities.length > 20) activities.pop();
   db.activities = activities;
