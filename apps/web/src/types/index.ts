@@ -240,41 +240,6 @@ export interface Activity {
   color: string;
 }
 
-export interface ConstructionStage {
-  id: number;
-  projectId: number;
-  name: string;
-  status: "Completed" | "In Progress" | "Not Started" | "Delayed";
-  progress: number;
-  targetDate: string;
-  plannedCost: string;
-  actualCost: string;
-  plannedLakhs: number;
-  actualLakhs: number;
-}
-
-export interface ConstructionLog {
-  id: number;
-  projectId: number;
-  date: string;
-  activity: string;
-  workers: number;
-  materials: string;
-  weather: string;
-  supervisor: string;
-  stageId?: number;
-}
-
-export interface ConstructionPhoto {
-  id: number;
-  projectId: number;
-  title: string;
-  date: string;
-  stage: string;
-  uploadedBy: string;
-  imageUrl?: string;
-}
-
 export interface DashboardData {
   monthlyData: { month: string; revenue: number; expenses: number; bookings: number }[];
   projectData: { name: string; sold: number; available: number; booked: number }[];

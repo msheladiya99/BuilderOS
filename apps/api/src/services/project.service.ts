@@ -1,5 +1,5 @@
 import { query } from "../db/pool.js";
-import { quoteIdent } from "../db/tenant.js";
+import { quoteIdent } from "../utils/sql.js";
 import { NotFoundError } from "../utils/errors.js";
 import { buildPaginationMeta, sqlPagination } from "../utils/pagination.js";
 import type { createProjectSchema, projectListQuerySchema } from "../schemas/project.js";

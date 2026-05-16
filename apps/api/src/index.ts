@@ -38,6 +38,7 @@ async function start() {
     console.log("PostgreSQL connected — /api/v1/owners (database)");
   } else {
     console.warn("PostgreSQL unavailable — Owner KYC uses JSON store (/api/v1/owners)");
+    console.warn("Optional: docker compose up -d && npm run db:migrate && npm run db:seed");
   }
 
   try {

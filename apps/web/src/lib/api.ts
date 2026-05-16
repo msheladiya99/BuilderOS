@@ -30,10 +30,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  const data = await res.json().catch(() => ({}));
-
+  let data: any = {};
+  const text = await res.text();
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (e) {
+    if (!res.ok) throw new Error(`Server error (${res.status}): ${text || res.statusText}`);
+    // If OK but not JSON, just return empty or the text
+    data = text; 
+  }
+  
   if (!res.ok) {
-    throw new Error(data.error || `Request failed: ${res.status}`);
+    throw new Error(data.error || data.message || `Request failed: ${res.status}`);
   }
   return data as T;
 }

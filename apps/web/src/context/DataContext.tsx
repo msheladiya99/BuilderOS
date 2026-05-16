@@ -34,9 +34,6 @@ import type {
   Activity,
   DashboardData,
   AppSettings,
-  ConstructionStage,
-  ConstructionLog,
-  ConstructionPhoto,
 } from "../types";
 
 export type ResourceKey =
@@ -89,9 +86,6 @@ interface DataContextValue {
   documentFolders: DocumentFolder[];
   documentFiles: DocumentFile[];
   erpUsers: ErpUser[];
-  constructionStages: ConstructionStage[];
-  constructionLogs: ConstructionLog[];
-  constructionPhotos: ConstructionPhoto[];
   settings: AppSettings | null;
   notifications: Notification[];
   activities: Activity[];
@@ -129,9 +123,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [documentFolders, setDocumentFolders] = useState<DocumentFolder[]>([]);
   const [documentFiles, setDocumentFiles] = useState<DocumentFile[]>([]);
   const [erpUsers, setErpUsers] = useState<ErpUser[]>([]);
-  const [constructionStages, setConstructionStages] = useState<ConstructionStage[]>([]);
-  const [constructionLogs, setConstructionLogs] = useState<ConstructionLog[]>([]);
-  const [constructionPhotos, setConstructionPhotos] = useState<ConstructionPhoto[]>([]);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -161,9 +152,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setDocumentFolders((boot.documentFolders as DocumentFolder[]) || []);
     setDocumentFiles((boot.documentFiles as DocumentFile[]) || []);
     setErpUsers((boot.erpUsers as ErpUser[]) || []);
-    setConstructionStages((boot.constructionStages as ConstructionStage[]) || []);
-    setConstructionLogs((boot.constructionLogs as ConstructionLog[]) || []);
-    setConstructionPhotos((boot.constructionPhotos as ConstructionPhoto[]) || []);
     setSettings((boot.settings as AppSettings) || null);
     setActivities((boot.activities as Activity[]) || []);
     setCacheBoot(boot);
@@ -414,9 +402,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         documentFolders,
         documentFiles,
         erpUsers,
-        constructionStages,
-        constructionLogs,
-        constructionPhotos,
         settings,
         notifications,
         activities,

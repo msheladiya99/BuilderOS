@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { query } from "./pool.js";
+import { quoteIdent } from "../utils/sql.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATE_PATH = path.resolve(__dirname, "../../../../database/schema/002_tenant_template.sql");
@@ -32,7 +33,7 @@ export async function provisionTenantSchema(schemaName: string) {
   await query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdent(schemaName)}`);
   const sql = fs.readFileSync(TEMPLATE_PATH, "utf-8");
   const statements = sql
-    .split(";")
+    .split(/;\s*$/m) // Better split that looks for semi-colon at end of line
     .map((s) => s.trim())
     .filter((s) => s.length > 0 && !s.startsWith("--"));
 
@@ -49,10 +50,6 @@ export async function provisionTenantSchema(schemaName: string) {
   } finally {
     client.release();
   }
-}
-
-export function quoteIdent(name: string): string {
-  return `"${name.replace(/"/g, '""')}"`;
 }
 
 export type TenantContext = {

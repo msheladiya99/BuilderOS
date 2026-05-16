@@ -1,5 +1,6 @@
 import type { Request } from "express";
 import { query } from "../db/pool.js";
+import { quoteIdent } from "../utils/sql.js";
 import type { AuthRequest } from "../middleware/auth.js";
 import type { TenantRequest } from "../middleware/tenant.js";
 
@@ -54,6 +55,3 @@ export async function writeAudit(params: AuditParams) {
   );
 }
 
-function quoteIdent(name: string) {
-  return `"${name.replace(/"/g, '""')}"`;
-}

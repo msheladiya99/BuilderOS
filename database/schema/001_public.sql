@@ -61,12 +61,13 @@ CREATE TABLE IF NOT EXISTS users (
   last_login_at TIMESTAMPTZ,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  deleted_at    TIMESTAMPTZ,
-  CONSTRAINT users_email_unique UNIQUE (email)
+  deleted_at    TIMESTAMPTZ
 );
 
+-- Partial unique index for soft-deletes
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email) WHERE deleted_at IS NULL;
+
 CREATE INDEX IF NOT EXISTS idx_users_company ON users(company_id) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE deleted_at IS NULL;
 
 -- Superadmin must not belong to a company
 ALTER TABLE users ADD CONSTRAINT users_superadmin_no_company
@@ -116,4 +117,6 @@ CREATE TRIGGER trg_companies_updated BEFORE UPDATE ON companies
 CREATE TRIGGER trg_users_updated BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_subscription_plans_updated BEFORE UPDATE ON subscription_plans
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_global_config_updated BEFORE UPDATE ON global_config
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();

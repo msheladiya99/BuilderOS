@@ -6,7 +6,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { useData } from "../../context/DataContext";
 import { useAuth, canAccessView } from "../../context/AuthContext";
 import { isMainPortal } from "../../lib/tenant";
-import { Loader2, CloudOff, RefreshCw, CheckCircle2 } from "lucide-react";
+import { WifiOff, Loader2, CloudOff, RefreshCw, CheckCircle2 } from "lucide-react";
 import type { ViewId } from "../../types";
 
 function pathToView(path: string): ViewId {

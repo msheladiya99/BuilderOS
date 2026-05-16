@@ -35,9 +35,11 @@ CREATE TABLE IF NOT EXISTS units (
   base_price  NUMERIC(14, 2) DEFAULT 0,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  deleted_at  TIMESTAMPTZ,
-  UNIQUE (project_id, unit_no)
+  deleted_at  TIMESTAMPTZ
 );
+
+-- Soft-delete aware uniqueness for unit numbers
+CREATE UNIQUE INDEX IF NOT EXISTS idx_units_project_unit_unique ON units(project_id, unit_no) WHERE deleted_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_units_project ON units(project_id) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_units_status ON units(status) WHERE deleted_at IS NULL;
@@ -59,7 +61,7 @@ CREATE TABLE IF NOT EXISTS owners (
                CHECK (kyc_status IN ('pending', 'submitted', 'verified', 'rejected')),
   kyc_notes    TEXT,
   verified_at  TIMESTAMPTZ,
-  verified_by  UUID,
+  verified_by  UUID REFERENCES public.users(id),
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at   TIMESTAMPTZ
@@ -285,4 +287,24 @@ CREATE TRIGGER trg_projects_updated BEFORE UPDATE ON projects
 CREATE TRIGGER trg_units_updated BEFORE UPDATE ON units
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER trg_owners_updated BEFORE UPDATE ON owners
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_owner_documents_updated BEFORE UPDATE ON owner_documents
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_payments_updated BEFORE UPDATE ON payments
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_expenses_updated BEFORE UPDATE ON expenses
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_materials_updated BEFORE UPDATE ON materials
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_vendors_updated BEFORE UPDATE ON vendors
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_purchase_orders_updated BEFORE UPDATE ON purchase_orders
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_vouchers_updated BEFORE UPDATE ON vouchers
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_milestones_updated BEFORE UPDATE ON milestones
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_complaints_updated BEFORE UPDATE ON complaints
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_financial_years_updated BEFORE UPDATE ON financial_years
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
