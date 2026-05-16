@@ -12,7 +12,7 @@ export type JsonDb = Record<string, unknown> & {
   users: Array<Record<string, unknown>>;
 };
 
-function readStore(): JsonDb {
+export function readStore(): JsonDb {
   if (!fs.existsSync(STORE_PATH)) {
     if (!fs.existsSync(SEED_PATH)) {
       throw new Error("Missing backend/data/seed.json");
