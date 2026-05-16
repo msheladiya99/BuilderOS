@@ -12,6 +12,7 @@ import {
   scopeBootstrap,
   resetJsonDb,
 } from "../services/json-store.service.js";
+import { filterListForProject } from "../utils/tenant-scope.js";
 import { pool } from "../db/pool.js";
 import { env } from "../config/env.js";
 
@@ -33,6 +34,9 @@ const COLLECTIONS = [
   "documentFiles",
   "erpUsers",
   "settings",
+  "constructionStages",
+  "constructionLogs",
+  "constructionPhotos",
 ] as const;
 
 export const compatRouter = Router();
@@ -183,6 +187,30 @@ compatRouter.get("/auth/me", requireAuth, async (req, res, next) => {
   }
 });
 
+compatRouter.patch("/auth/profile", requireAuth, (req, res) => {
+  const auth = getAuthUser(req);
+  const { name, avatar } = req.body as { name?: string; avatar?: string };
+  const db = getJsonDb();
+  const legacyId = (auth as { legacyId?: number }).legacyId ?? Number(auth.sub);
+  const user = db.users.find((u) => u.id === legacyId);
+  if (!user) return res.status(404).json({ error: "User not found" });
+  if (name?.trim()) user.name = name.trim();
+  if (avatar?.trim()) user.avatar = avatar.trim().slice(0, 3).toUpperCase();
+  const erpUsers = (db.erpUsers as { id: number; email: string; name: string }[]) ?? [];
+  const erp = erpUsers.find((e) => e.email.toLowerCase() === String(user.email).toLowerCase());
+  if (erp && name?.trim()) erp.name = name.trim();
+  saveJsonDb(db);
+  res.json(
+    toLegacyUser({
+      email: String(user.email),
+      name: String(user.name),
+      role: String(user.role),
+      avatar: String(user.avatar),
+      projectId: user.projectId as number | null,
+    })
+  );
+});
+
 compatRouter.post("/auth/forgot-password", (_req, res) => {
   res.json({ message: "Reset link sent (demo mode)" });
 });
@@ -196,8 +224,17 @@ compatRouter.get("/bootstrap", requireAuth, (req, res) => {
   res.json(scopeBootstrap(data, projectId));
 });
 
-compatRouter.get("/dashboard", requireAuth, (_req, res) => {
+compatRouter.get("/dashboard", requireAuth, (req, res) => {
+  const auth = getAuthUser(req);
+  const projectId = (auth as { legacyProjectId?: number | null }).legacyProjectId ?? null;
   const db = getJsonDb();
+  const scoped = scopeBootstrap(db, projectId) as typeof db & {
+    units: { status: string }[];
+    leads: { stage: string }[];
+    payments: unknown[];
+    projects: { name: string; sold: number; available: number; booked: number; progress: number; stages: string[]; currentStage: number }[];
+    pendingDues: unknown[];
+  };
   const monthlyData = [
     { month: "Nov", revenue: 38, expenses: 22, bookings: 12 },
     { month: "Dec", revenue: 52, expenses: 28, bookings: 18 },
@@ -207,9 +244,9 @@ compatRouter.get("/dashboard", requireAuth, (_req, res) => {
     { month: "Apr", revenue: 69, expenses: 35, bookings: 24 },
     { month: "May", revenue: 92, expenses: 42, bookings: 35 },
   ];
-  const projects = db.projects as { name: string; sold: number; available: number; booked: number; progress: number; stages: string[]; currentStage: number }[];
-  const units = db.units as { status: string }[];
-  const leads = db.leads as { stage: string }[];
+  const projects = scoped.projects;
+  const units = scoped.units;
+  const leads = scoped.leads;
   res.json({
     monthlyData,
     projectData: projects.map((p) => ({
@@ -224,7 +261,7 @@ compatRouter.get("/dashboard", requireAuth, (_req, res) => {
       { name: "Available", value: units.filter((u) => u.status === "Available").length, color: "#10B981" },
       { name: "Reserved", value: units.filter((u) => u.status === "Reserved").length, color: "#8B5CF6" },
     ],
-    recentPayments: (db.payments as unknown[]).slice(0, 5),
+    recentPayments: (scoped.payments as unknown[]).slice(0, 5),
     activities: db.activities,
     constructionProgress: projects.map((p) => ({
       name: p.name,
@@ -236,7 +273,7 @@ compatRouter.get("/dashboard", requireAuth, (_req, res) => {
       revenueChange: "+18.2%",
       expenses: "₹42.1L",
       expensesChange: "+8.4%",
-      pendingDues: (db.pendingDues as unknown[]).length,
+      pendingDues: (scoped.pendingDues as unknown[]).length,
       pendingAmount: "₹24.8L",
       unitsSold: units.filter((u) => u.status === "Sold").length,
       unitsTotal: units.length,
@@ -250,7 +287,11 @@ for (const key of COLLECTIONS) {
   compatRouter.get(`/${key}`, requireAuth, (req, res) => {
     const auth = getAuthUser(req);
     const projectId = (auth as { legacyProjectId?: number | null }).legacyProjectId;
-    const items = jsonStore.list(key, projectId != null ? { projectId } : undefined);
+    const db = getJsonDb();
+    let items = jsonStore.list<Record<string, unknown>>(key);
+    if (projectId != null) {
+      items = filterListForProject(key, items, projectId, db);
+    }
     res.json(items);
   });
 

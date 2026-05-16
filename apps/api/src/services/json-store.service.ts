@@ -12,17 +12,49 @@ export type JsonDb = Record<string, unknown> & {
   users: Array<Record<string, unknown>>;
 };
 
+const MERGE_FROM_SEED_KEYS = [
+  "constructionStages",
+  "constructionLogs",
+  "constructionPhotos",
+  "owners",
+  "ownerDocuments",
+] as const;
+
+function mergeMissingFromSeed(db: JsonDb): JsonDb {
+  if (!fs.existsSync(SEED_PATH)) return db;
+  const seed = JSON.parse(fs.readFileSync(SEED_PATH, "utf-8")) as JsonDb;
+  let changed = false;
+  for (const key of MERGE_FROM_SEED_KEYS) {
+    const existing = db[key] as unknown[] | undefined;
+    if (!existing?.length && Array.isArray(seed[key]) && (seed[key] as unknown[]).length) {
+      db[key] = seed[key];
+      changed = true;
+    }
+  }
+  if (!db.owners) {
+    db.owners = seed.owners ?? [];
+    changed = true;
+  }
+  if (!db.ownerDocuments) {
+    db.ownerDocuments = seed.ownerDocuments ?? [];
+    changed = true;
+  }
+  if (changed) writeStore(db);
+  return db;
+}
+
 function readStore(): JsonDb {
   if (!fs.existsSync(STORE_PATH)) {
     if (!fs.existsSync(SEED_PATH)) {
-      throw new Error("Missing backend/data/seed.json");
+      throw new Error("Missing apps/api/data/seed.json");
     }
     fs.mkdirSync(DATA_DIR, { recursive: true });
     const seed = JSON.parse(fs.readFileSync(SEED_PATH, "utf-8")) as JsonDb;
     fs.writeFileSync(STORE_PATH, JSON.stringify(seed, null, 2));
     return seed;
   }
-  return JSON.parse(fs.readFileSync(STORE_PATH, "utf-8")) as JsonDb;
+  const db = JSON.parse(fs.readFileSync(STORE_PATH, "utf-8")) as JsonDb;
+  return mergeMissingFromSeed(db);
 }
 
 function writeStore(data: JsonDb) {
@@ -135,14 +167,4 @@ export function toLegacyUser(user: {
   };
 }
 
-export function scopeBootstrap(data: Record<string, unknown>, projectId: number | null) {
-  if (!projectId) return data;
-  const scoped: Record<string, unknown> = { ...data };
-  if (Array.isArray(data.projects)) {
-    scoped.projects = (data.projects as { id: number }[]).filter((p) => p.id === projectId);
-  }
-  if (Array.isArray(data.units)) {
-    scoped.units = (data.units as { projectId: number }[]).filter((u) => u.projectId === projectId);
-  }
-  return scoped;
-}
+export { scopeBootstrap } from "../utils/tenant-scope.js";

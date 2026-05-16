@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { env } from "./config/env.js";
-import { v1Router } from "./routes/v1/index.js";
+import { v1Router, mountOwnersRoutes } from "./routes/v1/index.js";
 import { compatRouter, checkPostgres } from "./routes/compat.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { getJsonDb } from "./services/json-store.service.js";
@@ -33,11 +33,12 @@ app.use(errorHandler);
 
 async function start() {
   const pg = await checkPostgres();
+  mountOwnersRoutes(pg);
   if (pg) {
-    console.log("PostgreSQL connected — /api/v1 + Owner KYC enabled");
+    console.log("PostgreSQL connected — /api/v1/owners (database)");
   } else {
-    console.warn("PostgreSQL unavailable — running JSON demo mode for /api/*");
-    console.warn("Start Docker: docker compose up -d && npm run db:migrate && npm run db:seed");
+    console.warn("PostgreSQL unavailable — Owner KYC uses JSON store (/api/v1/owners)");
+    console.warn("Optional: docker compose up -d && npm run db:migrate && npm run db:seed");
   }
 
   try {

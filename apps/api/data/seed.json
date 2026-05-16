@@ -300,6 +300,48 @@
     { "id": 3, "title": "Low stock alert", "message": "TMT Steel below reorder level", "time": "5h ago", "read": true, "type": "inventory" },
     { "id": 4, "title": "Construction milestone", "message": "Block B Floor 8 slab complete", "time": "8h ago", "read": true, "type": "construction" }
   ],
+  "constructionStages": [
+    { "id": 1, "projectId": 1, "name": "Foundation", "status": "Completed", "progress": 100, "targetDate": "Mar 2023", "plannedCost": "₹4.0Cr", "actualCost": "₹4.2Cr", "plannedLakhs": 40, "actualLakhs": 42 },
+    { "id": 2, "projectId": 1, "name": "Structure - Block A", "status": "Completed", "progress": 100, "targetDate": "Dec 2023", "plannedCost": "₹18.0Cr", "actualCost": "₹18.6Cr", "plannedLakhs": 180, "actualLakhs": 186 },
+    { "id": 3, "projectId": 1, "name": "Structure - Block B", "status": "In Progress", "progress": 82, "targetDate": "Aug 2024", "plannedCost": "₹18.0Cr", "actualCost": "₹14.2Cr", "plannedLakhs": 180, "actualLakhs": 142 },
+    { "id": 4, "projectId": 1, "name": "Structure - Block C", "status": "In Progress", "progress": 45, "targetDate": "Dec 2024", "plannedCost": "₹18.0Cr", "actualCost": "₹6.8Cr", "plannedLakhs": 180, "actualLakhs": 68 },
+    { "id": 5, "projectId": 1, "name": "Finishing - Block A", "status": "In Progress", "progress": 68, "targetDate": "Dec 2025", "plannedCost": "₹12.0Cr", "actualCost": "₹8.4Cr", "plannedLakhs": 120, "actualLakhs": 84 },
+    { "id": 6, "projectId": 1, "name": "MEP Works", "status": "In Progress", "progress": 55, "targetDate": "Sep 2025", "plannedCost": "₹8.0Cr", "actualCost": "₹5.2Cr", "plannedLakhs": 80, "actualLakhs": 52 },
+    { "id": 7, "projectId": 2, "name": "Foundation", "status": "Completed", "progress": 100, "targetDate": "Jun 2023", "plannedCost": "₹3.5Cr", "actualCost": "₹3.6Cr", "plannedLakhs": 35, "actualLakhs": 36 },
+    { "id": 8, "projectId": 2, "name": "Structure - Phase 1", "status": "In Progress", "progress": 52, "targetDate": "Jun 2026", "plannedCost": "₹14.0Cr", "actualCost": "₹7.1Cr", "plannedLakhs": 140, "actualLakhs": 71 }
+  ],
+  "constructionLogs": [
+    { "id": 1, "projectId": 1, "date": "15 May 2026", "activity": "RCC Column casting - Block C Floor 8", "workers": 42, "materials": "Steel: 2.4MT, Cement: 180 bags", "weather": "Clear", "supervisor": "Ranjit" },
+    { "id": 2, "projectId": 1, "date": "14 May 2026", "activity": "Plastering work - Block A Floor 8-9", "workers": 38, "materials": "Sand: 800 CFT, Cement: 240 bags", "weather": "Cloudy", "supervisor": "Ramesh" },
+    { "id": 3, "projectId": 1, "date": "13 May 2026", "activity": "Beam bottom shuttering - Block C Floor 9", "workers": 45, "materials": "Steel: 1.8MT, Plywood: 200 pcs", "weather": "Clear", "supervisor": "Ranjit" },
+    { "id": 4, "projectId": 1, "date": "12 May 2026", "activity": "Waterproofing - Block A Terrace", "workers": 22, "materials": "Waterproofing compound: 800L", "weather": "Clear", "supervisor": "Ramesh" }
+  ],
+  "constructionPhotos": [
+    { "id": 1, "projectId": 1, "title": "Block C - Floor 8 Slab", "date": "15 May 2026", "stage": "Structure", "uploadedBy": "Ranjit Site", "imageUrl": "" },
+    { "id": 2, "projectId": 1, "title": "Block B - Finishing Work", "date": "14 May 2026", "stage": "Finishing", "uploadedBy": "Site Team", "imageUrl": "" },
+    { "id": 3, "projectId": 1, "title": "MEP Conduit Laying", "date": "13 May 2026", "stage": "MEP", "uploadedBy": "Ranjit Site", "imageUrl": "" },
+    { "id": 4, "projectId": 2, "title": "Foundation - Green Valley", "date": "12 May 2026", "stage": "Foundation", "uploadedBy": "Site Team", "imageUrl": "" }
+  ],
+  "owners": [
+    {
+      "id": "own_seed_1",
+      "project_id": 1,
+      "unit_id": "1",
+      "name": "Rahul Sharma",
+      "mobile": "9876543210",
+      "email": "rahul.sharma@email.com",
+      "aadhaar_no": "123456789012",
+      "pan_no": "ABCDE1234F",
+      "address": "Andheri West",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "pincode": "400058",
+      "kyc_status": "verified",
+      "kyc_notes": null,
+      "created_at": "2024-01-15T00:00:00.000Z"
+    }
+  ],
+  "ownerDocuments": [],
   "activities": [
     { "id": 1, "text": "New booking: Unit 205, Skyline Heights by Meena Krishnan", "time": "30m", "color": "emerald" },
     { "id": 2, "text": "Construction milestone: Block B, Floor 8 slab complete", "time": "2h", "color": "blue" },
@@ -325,6 +367,10 @@
     "documentFiles": 6,
     "erpUsers": 7,
     "notifications": 4,
-    "activities": 5
+    "activities": 5,
+    "constructionStages": 8,
+    "constructionLogs": 4,
+    "constructionPhotos": 4,
+    "owners": 1
   }
 }

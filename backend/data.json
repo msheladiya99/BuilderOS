@@ -97,7 +97,7 @@
       "launched": "Mar 2023",
       "completion": "Dec 2025",
       "status": "Active",
-      "progress": 78,
+      "progress": 50,
       "revenue": "₹89.4 Cr",
       "image": "SH",
       "stages": [
@@ -106,7 +106,7 @@
         "Finishing",
         "Handover"
       ],
-      "currentStage": 2
+      "currentStage": 1
     },
     {
       "id": 2,
@@ -1357,6 +1357,42 @@
   ],
   "activities": [
     {
+      "id": 14,
+      "time": "now",
+      "color": "emerald",
+      "text": "Stage â†’ Structure"
+    },
+    {
+      "id": 13,
+      "time": "now",
+      "color": "emerald",
+      "text": "Stage â†’ Foundation"
+    },
+    {
+      "id": 12,
+      "time": "now",
+      "color": "emerald",
+      "text": "Stage â†’ Structure"
+    },
+    {
+      "id": 11,
+      "time": "now",
+      "color": "emerald",
+      "text": "Stage â†’ Finishing"
+    },
+    {
+      "id": 10,
+      "time": "now",
+      "color": "emerald",
+      "text": "Stage â†’ Handover"
+    },
+    {
+      "id": 9,
+      "time": "now",
+      "color": "emerald",
+      "text": "Stage â†’ Handover"
+    },
+    {
       "id": 8,
       "time": "now",
       "color": "emerald",
@@ -1423,6 +1459,6 @@
     "documentFiles": 6,
     "erpUsers": 7,
     "notifications": 4,
-    "activities": 8
+    "activities": 14
   }
 }

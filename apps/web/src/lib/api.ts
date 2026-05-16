@@ -85,6 +85,12 @@ export const api = {
 
   me: () => request<unknown>("/auth/me"),
 
+  updateProfile: (body: { name?: string; avatar?: string }) =>
+    request<import("../types").User>("/auth/profile", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
   bootstrap: () => request<Record<string, unknown>>("/bootstrap"),
 
   dashboard: () => request<import("../types").DashboardData>("/dashboard"),

@@ -19,6 +19,8 @@ import { UsersModule } from "./components/users/UsersModule";
 import { OwnerPortal } from "./components/owner/OwnerPortal";
 import { VendorPortal } from "./components/vendor/VendorPortal";
 import { SettingsPage } from "./components/settings/SettingsPage";
+import { ProfilePage } from "./components/profile/ProfilePage";
+import { HelpSupportPage } from "./components/help/HelpSupportPage";
 import { SuperAdminPanel } from "./components/superadmin/SuperAdminPanel";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { useTheme } from "../context/ThemeContext";
@@ -169,6 +171,18 @@ export const router = createBrowserRouter([
         path: "settings",
         element: (
           <Themed>{(isDark) => <SettingsPage isDark={isDark} />}</Themed>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <Themed>{(isDark) => <ProfilePage isDark={isDark} />}</Themed>
+        ),
+      },
+      {
+        path: "help",
+        element: (
+          <Themed>{(isDark) => <HelpSupportPage isDark={isDark} />}</Themed>
         ),
       },
     ],

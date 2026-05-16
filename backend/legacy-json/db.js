@@ -3,11 +3,16 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, "data.json");
-const SEED_PATH = path.join(__dirname, "seed.json");
+const DATA_DIR = path.resolve(__dirname, "../data");
+const DB_PATH = path.join(DATA_DIR, "store.json");
+const SEED_PATH = path.join(DATA_DIR, "seed.json");
 
 function readDb() {
   if (!fs.existsSync(DB_PATH)) {
+    if (!fs.existsSync(SEED_PATH)) {
+      throw new Error(`Missing seed file: ${SEED_PATH}`);
+    }
+    fs.mkdirSync(DATA_DIR, { recursive: true });
     const seed = JSON.parse(fs.readFileSync(SEED_PATH, "utf-8"));
     fs.writeFileSync(DB_PATH, JSON.stringify(seed, null, 2));
     return seed;

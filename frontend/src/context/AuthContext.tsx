@@ -10,6 +10,7 @@ interface AuthContextValue {
   verifyOtp: (email: string, otp: string, subdomain?: string | null) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (data: { name?: string; avatar?: string }) => Promise<void>;
   hasRole: (...roles: UserRole[]) => boolean;
 }
 
@@ -68,6 +69,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateProfile = useCallback(async (data: { name?: string; avatar?: string }) => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      const current = getStoredUser() as User | null;
+      if (!current) throw new Error("Not logged in");
+      const updated = {
+        ...current,
+        name: data.name?.trim() || current.name,
+        avatar: data.avatar?.trim().slice(0, 3).toUpperCase() || current.avatar,
+      };
+      setUser(updated);
+      setStoredUser(updated);
+      const { enqueue } = await import("../lib/offline-store");
+      enqueue({ op: "profile", body: data });
+      return;
+    }
+    const updated = await api.updateProfile(data);
+    setUser(updated);
+    setStoredUser(updated);
+  }, []);
+
   const hasRole = useCallback(
     (...roles: UserRole[]) => {
       if (!user) return false;
@@ -86,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifyOtp,
         forgotPassword,
         logout,
+        updateProfile,
         hasRole,
       }}
     >
@@ -101,6 +123,7 @@ export function useAuth() {
 }
 
 export function canAccessView(role: UserRole, view: string): boolean {
+  if (view === "profile" || view === "help") return true;
   const allowed = ROLE_NAV[role];
   if (allowed.includes("*")) return true;
   return allowed.some((v) => view === v || view.startsWith(v));

@@ -300,6 +300,26 @@
     { "id": 3, "title": "Low stock alert", "message": "TMT Steel below reorder level", "time": "5h ago", "read": true, "type": "inventory" },
     { "id": 4, "title": "Construction milestone", "message": "Block B Floor 8 slab complete", "time": "8h ago", "read": true, "type": "construction" }
   ],
+  "owners": [
+    {
+      "id": "own_seed_1",
+      "project_id": 1,
+      "unit_id": "1",
+      "name": "Rahul Sharma",
+      "mobile": "9876543210",
+      "email": "rahul.sharma@email.com",
+      "aadhaar_no": "123456789012",
+      "pan_no": "ABCDE1234F",
+      "address": "Andheri West",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "pincode": "400058",
+      "kyc_status": "verified",
+      "kyc_notes": null,
+      "created_at": "2024-01-15T00:00:00.000Z"
+    }
+  ],
+  "ownerDocuments": [],
   "activities": [
     { "id": 1, "text": "New booking: Unit 205, Skyline Heights by Meena Krishnan", "time": "30m", "color": "emerald" },
     { "id": 2, "text": "Construction milestone: Block B, Floor 8 slab complete", "time": "2h", "color": "blue" },
@@ -325,6 +345,7 @@
     "documentFiles": 6,
     "erpUsers": 7,
     "notifications": 4,
-    "activities": 5
+    "activities": 5,
+    "owners": 1
   }
 }

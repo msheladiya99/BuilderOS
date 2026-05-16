@@ -6,7 +6,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { useData } from "../../context/DataContext";
 import { useAuth, canAccessView } from "../../context/AuthContext";
 import { isMainPortal } from "../../lib/tenant";
-import { WifiOff, Loader2 } from "lucide-react";
+import { Loader2, CloudOff, RefreshCw, CheckCircle2 } from "lucide-react";
 import type { ViewId } from "../../types";
 
 function pathToView(path: string): ViewId {
@@ -17,34 +17,30 @@ function pathToView(path: string): ViewId {
 export function AppLayout() {
   const { isDark, toggleDark } = useTheme();
   const { user, logout } = useAuth();
-  const { loading, error, refresh } = useData();
+  const { loading, error, refresh, isOffline, syncing, pendingChanges, syncMessage } = useData();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   const currentView = pathToView(location.pathname);
 
   useEffect(() => {
     if (!user) return;
-    if (isMainPortal() && user.role === "superadmin" && currentView !== "superadmin" && currentView !== "settings" && currentView !== "users") {
+    if (
+      isMainPortal() &&
+      user.role === "superadmin" &&
+      currentView !== "superadmin" &&
+      currentView !== "settings" &&
+      currentView !== "users" &&
+      currentView !== "profile" &&
+      currentView !== "help"
+    ) {
       if (currentView === "dashboard") navigate("/superadmin", { replace: true });
     }
     if (!canAccessView(user.role, currentView)) {
       navigate(user.role === "superadmin" ? "/superadmin" : "/dashboard", { replace: true });
     }
   }, [user, currentView, navigate]);
-
-  useEffect(() => {
-    const on = () => setIsOnline(true);
-    const off = () => setIsOnline(false);
-    window.addEventListener("online", on);
-    window.addEventListener("offline", off);
-    return () => {
-      window.removeEventListener("online", on);
-      window.removeEventListener("offline", off);
-    };
-  }, []);
 
   const handleNavigate = (view: string) => {
     navigate(view === "dashboard" ? "/dashboard" : `/${view}`);
@@ -73,12 +69,31 @@ export function AppLayout() {
           isDark={isDark}
           onToggleDark={toggleDark}
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+          onNavigate={handleNavigate}
+          onLogout={handleLogout}
         />
 
-        {!isOnline && (
+        {isOffline && (
           <div className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-xs">
-            <WifiOff size={14} />
-            <span>You are offline. Some features may not be available.</span>
+            <CloudOff size={14} />
+            <span>
+              Offline mode — using saved data
+              {pendingChanges > 0 ? ` · ${pendingChanges} pending sync` : ""}
+            </span>
+          </div>
+        )}
+
+        {syncing && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs">
+            <RefreshCw size={14} className="animate-spin" />
+            <span>Syncing with server…</span>
+          </div>
+        )}
+
+        {!isOffline && syncMessage && !syncing && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-xs">
+            <CheckCircle2 size={14} />
+            <span>{syncMessage}</span>
           </div>
         )}
 

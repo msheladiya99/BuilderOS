@@ -281,4 +281,6 @@ export type ViewId =
   | "users"
   | "owner"
   | "vendor"
-  | "settings";
+  | "settings"
+  | "profile"
+  | "help";

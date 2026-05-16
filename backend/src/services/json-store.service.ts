@@ -135,14 +135,4 @@ export function toLegacyUser(user: {
   };
 }
 
-export function scopeBootstrap(data: Record<string, unknown>, projectId: number | null) {
-  if (!projectId) return data;
-  const scoped: Record<string, unknown> = { ...data };
-  if (Array.isArray(data.projects)) {
-    scoped.projects = (data.projects as { id: number }[]).filter((p) => p.id === projectId);
-  }
-  if (Array.isArray(data.units)) {
-    scoped.units = (data.units as { projectId: number }[]).filter((u) => u.projectId === projectId);
-  }
-  return scoped;
-}
+export { scopeBootstrap } from "../utils/tenant-scope.js";
