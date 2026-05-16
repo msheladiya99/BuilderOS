@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useData } from "../../../context/DataContext";
-import { Search, Plus, AlertTriangle, Package, Truck, ShoppingCart, BarChart3 } from "lucide-react";
+import { Search, Plus, AlertTriangle, Package, Truck, ShoppingCart, BarChart3, X } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const USAGE_DATA = [
@@ -19,6 +19,8 @@ export function InventoryModule({ isDark }: InventoryModuleProps) {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [matForm, setMatForm] = useState({ name: "", unit: "Nos", stock: 0, minStock: 100, category: "General", vendor: "", cost: "₹0" });
+  const [showPOForm, setShowPOForm] = useState(false);
+  const [poForm, setPoForm] = useState({ vendor: "", items: "", value: "", delivery: "" });
 
   const text = isDark ? "text-white" : "text-slate-800";
   const muted = "text-slate-500";
@@ -41,6 +43,22 @@ export function InventoryModule({ isDark }: InventoryModuleProps) {
     setMatForm({ name: "", unit: "Nos", stock: 0, minStock: 100, category: "General", vendor: "", cost: "₹0" });
   };
 
+  const handleAddPO = async () => {
+    if (!poForm.vendor || !poForm.items) return;
+    const poNo = `PO-${5000 + purchaseOrders.length}`;
+    await persist("purchaseOrders", {
+      poNo,
+      vendor: poForm.vendor,
+      items: poForm.items,
+      value: poForm.value.startsWith("₹") ? poForm.value : `₹${poForm.value}`,
+      date: new Date().toLocaleDateString("en-GB"),
+      delivery: poForm.delivery || "TBD",
+      status: "In Transit"
+    }, undefined, `Created purchase order ${poNo} for ${poForm.vendor}`);
+    setShowPOForm(false);
+    setPoForm({ vendor: "", items: "", value: "", delivery: "" });
+  };
+
   return (
     <div className="p-5 space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -49,9 +67,16 @@ export function InventoryModule({ isDark }: InventoryModuleProps) {
           <p className={`text-sm ${muted}`}>{materials.length} materials · {lowStock.length} low stock alerts</p>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium">
-            <Plus size={15} /> Create PO
-          </button>
+          {activeTab === "materials" && (
+            <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium">
+              <Plus size={15} /> Add Material
+            </button>
+          )}
+          {activeTab === "purchase-orders" && (
+            <button onClick={() => setShowPOForm(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium">
+              <Plus size={15} /> Create PO
+            </button>
+          )}
         </div>
       </div>
 
@@ -72,7 +97,7 @@ export function InventoryModule({ isDark }: InventoryModuleProps) {
         {[
           { label: "Total Items", value: materials.length, icon: Package, color: "blue" },
           { label: "Low Stock", value: lowStock.length, icon: AlertTriangle, color: "orange" },
-          { label: "Open POs", value: 3, icon: ShoppingCart, color: "purple" },
+          { label: "Open POs", value: purchaseOrders.filter(po => po.status !== "Delivered").length, icon: ShoppingCart, color: "purple" },
           { label: "This Month Spend", value: "₹78.4L", icon: BarChart3, color: "emerald" },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className={`${card} p-4`}>
@@ -228,6 +253,101 @@ export function InventoryModule({ isDark }: InventoryModuleProps) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Add Material Modal */}
+      {showAdd && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className={`w-full max-w-lg rounded-2xl border shadow-2xl ${isDark ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}`}>
+            <div className={`flex items-center justify-between px-5 py-4 border-b ${border}`}>
+              <h3 className={`font-semibold ${text}`}>Add Material</h3>
+              <button onClick={() => setShowAdd(false)} className={`${muted} hover:text-red-500`}><X size={18} /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              {[
+                { key: "name", label: "Material Name", placeholder: "e.g. Steel 12mm", type: "text" },
+                { key: "category", label: "Category", placeholder: "e.g. Steel", type: "text" },
+                { key: "vendor", label: "Primary Vendor", placeholder: "Vendor name", type: "text" },
+                { key: "cost", label: "Cost", placeholder: "e.g. ₹60/kg", type: "text" },
+                { key: "unit", label: "Unit of Measurement", placeholder: "e.g. kg, tons, bags", type: "text" },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className={`block text-xs font-medium mb-1.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>{f.label}</label>
+                  <input
+                    type="text"
+                    placeholder={f.placeholder}
+                    value={matForm[f.key as keyof typeof matForm]}
+                    onChange={(e) => setMatForm({ ...matForm, [f.key]: e.target.value })}
+                    className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-blue-500 ${isDark ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                  />
+                </div>
+              ))}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-xs font-medium mb-1.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>Initial Stock</label>
+                  <input
+                    type="number"
+                    value={matForm.stock}
+                    onChange={(e) => setMatForm({ ...matForm, stock: Number(e.target.value) })}
+                    className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-blue-500 ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-xs font-medium mb-1.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>Min Stock Alert</label>
+                  <input
+                    type="number"
+                    value={matForm.minStock}
+                    onChange={(e) => setMatForm({ ...matForm, minStock: Number(e.target.value) })}
+                    className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-blue-500 ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className={`flex justify-end gap-3 px-5 py-4 border-t ${border}`}>
+              <button onClick={() => setShowAdd(false)} className={`px-4 py-2 rounded-xl border text-sm ${isDark ? "border-slate-700 text-slate-300" : "border-slate-200 text-slate-700"}`}>Cancel</button>
+              <button onClick={handleAddMaterial} disabled={saving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium">
+                {saving ? "Saving..." : "Add Material"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create PO Modal */}
+      {showPOForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className={`w-full max-w-lg rounded-2xl border shadow-2xl ${isDark ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}`}>
+            <div className={`flex items-center justify-between px-5 py-4 border-b ${border}`}>
+              <h3 className={`font-semibold ${text}`}>Create Purchase Order</h3>
+              <button onClick={() => setShowPOForm(false)} className={`${muted} hover:text-red-500`}><X size={18} /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              {[
+                { key: "vendor", label: "Vendor Name", placeholder: "e.g. UltraTech Cement" },
+                { key: "items", label: "Items Required", placeholder: "e.g. 500 bags Cement" },
+                { key: "value", label: "Total Value", placeholder: "e.g. ₹1.5L" },
+                { key: "delivery", label: "Expected Delivery", placeholder: "DD/MM/YYYY" },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className={`block text-xs font-medium mb-1.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>{f.label}</label>
+                  <input
+                    type="text"
+                    placeholder={f.placeholder}
+                    value={poForm[f.key as keyof typeof poForm]}
+                    onChange={(e) => setPoForm({ ...poForm, [f.key]: e.target.value })}
+                    className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-blue-500 ${isDark ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className={`flex justify-end gap-3 px-5 py-4 border-t ${border}`}>
+              <button onClick={() => setShowPOForm(false)} className={`px-4 py-2 rounded-xl border text-sm ${isDark ? "border-slate-700 text-slate-300" : "border-slate-200 text-slate-700"}`}>Cancel</button>
+              <button onClick={handleAddPO} disabled={saving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium">
+                {saving ? "Saving..." : "Create PO"}
+              </button>
+            </div>
           </div>
         </div>
       )}

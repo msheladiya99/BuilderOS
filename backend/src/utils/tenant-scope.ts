@@ -66,18 +66,18 @@ export type OwnerRow = {
   unit_id?: string | null;
 };
 
-export function ownerBelongsToProject(
-  owner: OwnerRow,
+export function ownerBelongsToProject<T extends OwnerRow>(
+  owner: T,
   projectId: number | null | undefined
 ): boolean {
   if (!projectId) return true;
   return Number(owner.project_id) === projectId;
 }
 
-export function filterOwnersForProject(
-  owners: OwnerRow[],
+export function filterOwnersForProject<T extends OwnerRow>(
+  owners: T[],
   projectId: number | null | undefined
-): OwnerRow[] {
+): T[] {
   if (!projectId) return owners;
   return owners.filter((o) => ownerBelongsToProject(o, projectId));
 }

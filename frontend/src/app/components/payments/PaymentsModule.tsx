@@ -16,7 +16,7 @@ const COLLECTION_DATA = [
 type PaymentsProps = { isDark: boolean };
 
 export function PaymentsModule({ isDark }: PaymentsProps) {
-  const { payments, pendingDues, persist, saving } = useData();
+  const { payments, pendingDues, persist, saving, customers } = useData();
   const RECENT_PAYMENTS = payments;
   const PENDING_DUES = pendingDues;
   const [activeTab, setActiveTab] = useState("collection");
@@ -265,13 +265,35 @@ export function PaymentsModule({ isDark }: PaymentsProps) {
               ].map(f => (
                 <div key={f.key}>
                   <label className={`block text-xs font-medium mb-1.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>{f.label}</label>
-                  <input
-                    type="text"
-                    placeholder={f.placeholder}
-                    value={payForm[f.key as keyof typeof payForm]}
-                    onChange={(e) => setPayForm({ ...payForm, [f.key]: e.target.value })}
-                    className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-blue-500 ${isDark ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500" : "bg-slate-50 border-slate-200 text-slate-800"}`}
-                  />
+                  {f.key === "customer" ? (
+                    <select
+                      value={payForm.customer}
+                      onChange={(e) => {
+                        const selectedCustomer = customers.find(c => c.name === e.target.value);
+                        setPayForm({
+                          ...payForm,
+                          customer: e.target.value,
+                          unit: selectedCustomer ? selectedCustomer.unit : payForm.unit
+                        });
+                      }}
+                      className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-blue-500 ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                    >
+                      <option value="" disabled>Select a customer</option>
+                      {customers.map((c) => (
+                        <option key={c.id} value={c.name}>
+                          {c.name} {c.unit ? `(${c.unit})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder={f.placeholder}
+                      value={payForm[f.key as keyof typeof payForm]}
+                      onChange={(e) => setPayForm({ ...payForm, [f.key]: e.target.value })}
+                      className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-blue-500 ${isDark ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                    />
+                  )}
                 </div>
               ))}
             </div>

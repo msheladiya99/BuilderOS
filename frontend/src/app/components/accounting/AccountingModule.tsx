@@ -5,7 +5,7 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
-import { TrendingUp, TrendingDown, IndianRupee, FileText, Plus, Download, Filter } from "lucide-react";
+import { TrendingUp, TrendingDown, IndianRupee, FileText, Plus, Download, Filter, X } from "lucide-react";
 
 const MONTHLY_PL = [
   { month: "Nov", income: 4200, expenses: 2800, profit: 1400 },
@@ -58,6 +58,22 @@ export function AccountingModule({ isDark }: AccountingProps) {
   const [showVoucher, setShowVoucher] = useState(false);
   const [vForm, setVForm] = useState({ type: "Receipt", party: "", desc: "", amount: "", dr: "Bank A/c", cr: "Customer A/c" });
 
+  const handleAddVoucher = async () => {
+    if (!vForm.party || !vForm.amount) return;
+    const vNo = `V-${2400 + vouchers.length}`;
+    await persist("vouchers", {
+      voucherNo: vNo,
+      date: new Date().toLocaleDateString("en-GB"),
+      type: vForm.type,
+      party: vForm.party,
+      desc: vForm.desc,
+      amount: vForm.amount.startsWith("₹") ? vForm.amount : `₹${vForm.amount}`,
+      status: "Posted"
+    }, undefined, `Created voucher ${vNo}`);
+    setShowVoucher(false);
+    setVForm({ type: "Receipt", party: "", desc: "", amount: "", dr: "Bank A/c", cr: "Customer A/c" });
+  };
+
   const text = isDark ? "text-white" : "text-slate-800";
   const muted = "text-slate-500";
   const border = isDark ? "border-slate-700" : "border-slate-200";
@@ -85,7 +101,7 @@ export function AccountingModule({ isDark }: AccountingProps) {
           <button className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm ${isDark ? "border-slate-700 text-slate-300" : "border-slate-200 text-slate-600"}`}>
             <Download size={14} /> Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium">
+          <button onClick={() => setShowVoucher(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium">
             <Plus size={15} /> New Voucher
           </button>
         </div>
@@ -265,6 +281,71 @@ export function AccountingModule({ isDark }: AccountingProps) {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* New Voucher Modal */}
+      {showVoucher && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className={`w-full max-w-lg rounded-2xl border shadow-2xl ${isDark ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}`}>
+            <div className={`flex items-center justify-between px-5 py-4 border-b ${border}`}>
+              <h3 className={`font-semibold ${text}`}>New Voucher</h3>
+              <button onClick={() => setShowVoucher(false)} className={`${muted} hover:text-red-500`}><X size={18} /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-xs font-medium mb-1.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>Voucher Type</label>
+                  <select 
+                    value={vForm.type}
+                    onChange={(e) => setVForm({ ...vForm, type: e.target.value })}
+                    className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                  >
+                    <option>Receipt</option>
+                    <option>Payment</option>
+                    <option>Journal</option>
+                    <option>Contra</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={`block text-xs font-medium mb-1.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>Amount</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. 50000"
+                    value={vForm.amount}
+                    onChange={(e) => setVForm({ ...vForm, amount: e.target.value })}
+                    className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={`block text-xs font-medium mb-1.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>Party / Ledger Name</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. UltraTech Cement"
+                  value={vForm.party}
+                  onChange={(e) => setVForm({ ...vForm, party: e.target.value })}
+                  className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                />
+              </div>
+              <div>
+                <label className={`block text-xs font-medium mb-1.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>Description / Narration</label>
+                <textarea 
+                  rows={2}
+                  placeholder="Payment for invoice #123"
+                  value={vForm.desc}
+                  onChange={(e) => setVForm({ ...vForm, desc: e.target.value })}
+                  className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none resize-none ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                />
+              </div>
+            </div>
+            <div className={`flex justify-end gap-3 px-5 py-4 border-t ${border}`}>
+              <button onClick={() => setShowVoucher(false)} className={`px-4 py-2 rounded-xl border text-sm ${isDark ? "border-slate-700 text-slate-300" : "border-slate-200 text-slate-700"}`}>Cancel</button>
+              <button onClick={handleAddVoucher} disabled={saving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium">
+                {saving ? "Saving..." : "Save Voucher"}
+              </button>
+            </div>
           </div>
         </div>
       )}
